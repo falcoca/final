@@ -1,0 +1,7 @@
+<h3> Search by Neighborhood </h3>
+
+<% for area in @areas %>
+    <p><a href="/areas/<%= area[:id] %>"><%= area[:name] %></a></p>
+<% end %>
+
+<h3> Search by Destination </h3>
