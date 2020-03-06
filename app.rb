@@ -100,5 +100,5 @@ post "/locations/submit" do
         address: params["address"],
         areas_id: params["areas_id"])
     
-    view "submit_area"
+    view "submit_location"
 end
