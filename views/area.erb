@@ -13,13 +13,13 @@
   <tbody>
     <tr>
       <td><% for location in @locations %>
-    <p><a href="/locations/<%= location[:id] %>"><%= location[:name] %></a></p>
-<% end %></td>
+        <p><a href="/locations/<%= location[:id] %>"><%= location[:name] %></a></p>
+    <% end %></td>
       <td><% for location in @locations %>
-    <p><a href="/locations/<%= location[:id] %>"> <%= location [:description] %></a></p>
-<% end %></td>
-      <td>82%</td>
-      </tr>
+        <p><%= location [:description] %></p>
+    <% end %></td>
+      <td><%= @average %></td>
+    </tr>
   </tbody>
 </table>
 
