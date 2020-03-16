@@ -1,10 +1,12 @@
 # Set up for the application and database. DO NOT CHANGE. #############################
-require "sinatra"                                                                     #
+require "sinatra"
+require "sinatra/cookies"                                                                     #
 require "sinatra/reloader" if development?                                            #
 require "sequel"                                                                      #
 require "logger"                                                                      #
 require "twilio-ruby"                                                                 #
-require "bcrypt"                                                                      #
+require "bcrypt"
+require "geocoder"                                                                      #
 connection_string = ENV['DATABASE_URL'] || "sqlite://#{Dir.pwd}/development.sqlite3"  #
 DB ||= Sequel.connect(connection_string)                                              #
 DB.loggers << Logger.new($stdout) unless DB.loggers.size > 0                          #
@@ -40,10 +42,9 @@ get "/locations/:id" do
     puts "params: #{params}"
     @locations = locations_table.all.to_a
     @location = locations_table.where(id: params[:id]).to_a[0]
-    @user = users_table.where(id: params[:id]).to_a[0]
     @rikis = rikis_table.where(locations_id: @location[:id])
     @users_table = users_table
-
+    @average = rikis_table.where(locations_id: @location[:id]).avg(:rating)
     view "location"
 end
 
@@ -53,9 +54,16 @@ end
 
 post "/users/create" do
     puts params
-    hashed_password = BCrypt::Password.create(params["password"])
-    users_table.insert(name: params["name"], email: params["email"], password: hashed_password)
-    view "create_user"
+    
+    # Prevent Duplicate Emails
+    existing_user = users_table.where(email: params["email"]).to_a[0]
+    if existing_user
+        view "error"
+    else
+        hashed_password = BCrypt::Password.create(params["password"])
+        users_table.insert(name: params["name"], email: params["email"], password: hashed_password)
+        redirect "/logins/new"
+    end
 end
 
 get "/logins/new" do
@@ -83,7 +91,7 @@ end
 get "/areas/:id" do
     @area = areas_table.where(id: params[:id]).to_a[0]
     @locations = locations_table.where(areas_id: @area[:id])
-    @average = rikis_table.avg(:rating)
+    @rikis_table = rikis_table
     view "area"
 end
 
@@ -108,4 +116,13 @@ post "/locations/submit" do
         areas_id: params["areas_id"])
     
     view "submit_location"
+end
+
+get "/map/:id" do
+  # lat: ± 90.0
+  # long: ± 180.0
+  puts "params: #{params}"
+  @locations = locations_table.all.to_a
+  @location = locations_table.where(id: params[:id]).to_a[0]
+  view "map"
 end
